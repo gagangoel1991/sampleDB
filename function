@@ -1,0 +1,58 @@
+USE [SFP_Staging]
+GO
+
+/****** Object:  UserDefinedFunction [dbo].[partytype_gagan1]    Script Date: 03/03/2024 22:13:00 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE FUNCTION [dbo].[partytype_gagan1]
+(
+    @var int
+)
+RETURNS @Result TABLE (party_type varchar,Splitvalue varchar)
+AS
+BEGIN
+--declare @var int =8;
+declare @var_3 int =@var;
+declare @var_2 varchar(200)='';
+declare  @var_1 varchar(200)='';
+declare  @var_4 varchar(200)='';
+while (@var>0)
+BEGIN
+
+
+select @var_1= cast(party_type as varchar) from (
+select *,ROW_NUMBER() over(order by  party_type asc) as rn from (
+select distinct cast(party_type as int) as party_type from [lom_testing].[ambpartytype31Jan2024]
+union all
+select @var as party_type)A)B where rn =(select max(rn-1) from (
+select *,ROW_NUMBER() over(order by  party_type asc) as rn from (
+select distinct cast(party_type as int) as party_type from [lom_testing].[ambpartytype31Jan2024]
+union all
+select @var as party_type)A)B where B.party_type=@var)
+select @var=@var-party_type from (
+select *,ROW_NUMBER() over(order by  party_type asc) as rn from (
+select distinct cast(party_type as int) as party_type from [lom_testing].[ambpartytype31Jan2024]
+union all
+select @var as party_type)A)B where rn =(
+select max(rn-1) from (
+select *,ROW_NUMBER() over(order by  party_type asc) as rn from (
+select distinct cast(party_type as int) as party_type from [lom_testing].[ambpartytype31Jan2024]
+union all
+select @var as party_type)A)B where B.party_type=@var)
+
+select @var_2= concat(@var_2,';',@var_1)
+
+
+END
+select @var_4=Splitvalue from dbo.SplitStringIntoRows(right(@var_2,len(@var_2)-1),';')
+
+INSERT INTO @Result (party_type,Splitvalue) VALUES (@var_3,@var_4)
+   RETURN
+END
+GO
+
+
